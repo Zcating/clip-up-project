@@ -27,3 +27,5 @@ dist-electron
 .trae
 .agents
 skills-lock.json
+
+test-results
