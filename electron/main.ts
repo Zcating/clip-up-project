@@ -8,6 +8,13 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 
 let mainWindow: BrowserWindow | null = null;
 
+const getAssetPath = (...paths: string[]): string => {
+  const basePath = app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'assets')
+    : path.join(__dirname, 'assets');
+  return path.join(basePath, ...paths);
+};
+
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -24,6 +31,7 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+  mainWindow.webContents.openDevTools();
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('页面加载失败:', errorCode, errorDescription);
@@ -84,7 +92,9 @@ ipcMain.handle('batch-convert-videos', async (_event, options: {
     const outputPath = path.join(outputDir, `${fileName}_rec709.mp4`);
     return {
       input: inputPath, output: outputPath, config: {
-        mode: method, dlogType, lut: path.join(__dirname, 'DJI OSMO Pocket 3 D-Log M to Rec.709 V1.cube')
+        mode: method,
+        dlogType,
+        lut: getAssetPath('DJI OSMO Pocket 3 D-Log M to Rec.709 V1.cube')
       }
     };
   });

@@ -6,7 +6,9 @@ export default {
   packagerConfig: {
     name: 'ClipUp',
     executableName: 'ClipUp',
-    asar: true,
+    asar: {
+      unpack: 'electron/assets/**/*',
+    },
   },
   rebuildConfig: {},
   makers: [

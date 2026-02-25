@@ -180,6 +180,20 @@ function Home() {
                   错误信息: {convertResult.error}
                 </p>
               )}
+              {convertResult.results.filter(r => !r.success).length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-red-800 mb-2">失败文件详情:</p>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    {convertResult.results
+                      .filter(r => !r.success)
+                      .map((result, index) => (
+                        <li key={index} className="break-all">
+                          {result.input}: {result.error || '未知错误'}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
