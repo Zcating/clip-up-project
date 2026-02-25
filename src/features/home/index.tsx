@@ -10,7 +10,7 @@ import { ConversionResult } from './components/conversion-result'
 
 /**
  * Home 组件
- * 
+ *
  * 应用程序的主页面，包含以下主要功能：
  * 1. 批量导入视频文件
  * 2. 显示已导入的视频列表
@@ -48,17 +48,17 @@ function Home() {
     const unsubscribeProgress = window.electronAPI.onConvertProgress((data) => {
       setConvertProgress(data)
       // 当收到总体进度更新时，意味着上一个文件已完成，确保将其进度设置为 100%
-      setFileProgressMap(prev => ({
+      setFileProgressMap((prev) => ({
         ...prev,
-        [data.currentIndex]: 100
+        [data.currentIndex]: 100,
       }))
     })
 
     // 监听单个文件的详细转换进度（例如：ffmpeg 处理进度）
     const unsubscribeFileProgress = window.electronAPI.onConvertFileProgress((data) => {
-      setFileProgressMap(prev => ({
+      setFileProgressMap((prev) => ({
         ...prev,
-        [data.currentIndex]: data.progress
+        [data.currentIndex]: data.progress,
       }))
     })
 
@@ -94,7 +94,7 @@ function Home() {
       const validVideos = metadataResults.filter((m): m is VideoFile => m !== null)
 
       // 将新导入的视频追加到现有列表中
-      setVideoFiles(prev => [...prev, ...validVideos])
+      setVideoFiles((prev) => [...prev, ...validVideos])
     } catch (error) {
       console.error('导入视频失败:', error)
     } finally {
@@ -107,7 +107,7 @@ function Home() {
    * @param index 要移除的视频在列表中的索引
    */
   const handleRemoveVideo = useCallback((index: number) => {
-    setVideoFiles(prev => prev.filter((_, i) => i !== index))
+    setVideoFiles((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
   /**
@@ -148,14 +148,14 @@ function Home() {
     setConvertResult(null)
 
     try {
-      const inputFiles = videoFiles.map(v => v.path)
+      const inputFiles = videoFiles.map((v) => v.path)
       // 调用 Electron API 执行批量转换
       const result = await window.electronAPI.batchConvertVideos({
         inputFiles,
         outputDir,
         method: 'advanced', // 默认使用高级模式
-        dlogType: 'dlogm',  // 默认 D-Log M
-        concurrency: 2      // 并发数为 2
+        dlogType: 'dlogm', // 默认 D-Log M
+        concurrency: 2, // 并发数为 2
       })
 
       if (result.error) {
@@ -175,9 +175,8 @@ function Home() {
 
   // 计算总体进度百分比（用于显示总进度条）
   const totalFiles = videoFiles.length
-  const totalProgressPercent = totalFiles > 0
-    ? Object.values(fileProgressMap).reduce((a, b) => a + b, 0) / totalFiles
-    : 0
+  const totalProgressPercent =
+    totalFiles > 0 ? Object.values(fileProgressMap).reduce((a, b) => a + b, 0) / totalFiles : 0
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -191,28 +190,19 @@ function Home() {
             onClear={handleClearAll}
           />
 
-          <div className="text-sm text-gray-500 mb-4">
-            已选择 {videoFiles.length} 个视频文件
-          </div>
+          <div className="text-sm text-gray-500 mb-4">已选择 {videoFiles.length} 个视频文件</div>
 
           {/* 视频列表展示：空状态或表格 */}
           {videoFiles.length === 0 ? (
             <VideoEmpty />
           ) : (
-            <VideoTable
-              videos={videoFiles}
-              onRemove={handleRemoveVideo}
-              disabled={isConverting}
-            />
+            <VideoTable videos={videoFiles} onRemove={handleRemoveVideo} disabled={isConverting} />
           )}
         </div>
 
         {/* 底部区域：输出配置、操作按钮及进度/结果展示 */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <OutputConfig
-            outputDir={outputDir}
-            onSelectDir={handleSelectOutputDir}
-          />
+          <OutputConfig outputDir={outputDir} onSelectDir={handleSelectOutputDir} />
 
           <ConvertActions
             isConverting={isConverting}
@@ -232,9 +222,7 @@ function Home() {
           )}
 
           {/* 转换完成：显示结果汇总 */}
-          {convertResult && (
-            <ConversionResult convertResult={convertResult} />
-          )}
+          {convertResult && <ConversionResult convertResult={convertResult} />}
         </div>
       </div>
     </div>

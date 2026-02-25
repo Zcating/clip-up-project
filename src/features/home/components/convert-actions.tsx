@@ -6,17 +6,10 @@ interface ConvertActionsProps {
   onStartConvert: () => void
 }
 
-export function ConvertActions({
-  isConverting,
-  canConvert,
-  onStartConvert
-}: ConvertActionsProps) {
+export function ConvertActions({ isConverting, canConvert, onStartConvert }: ConvertActionsProps) {
   return (
     <div className="flex gap-4 mb-6">
-      <Button
-        onClick={onStartConvert}
-        disabled={!canConvert}
-      >
+      <Button onClick={onStartConvert} disabled={!canConvert}>
         {isConverting ? '转换中...' : '开始批量转换'}
       </Button>
     </div>

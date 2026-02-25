@@ -1,6 +1,6 @@
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
-import { MakerZIP } from '@electron-forge/maker-zip';
-import { VitePlugin } from '@electron-forge/plugin-vite';
+import { MakerSquirrel } from '@electron-forge/maker-squirrel'
+import { MakerZIP } from '@electron-forge/maker-zip'
+import { VitePlugin } from '@electron-forge/plugin-vite'
 
 export default {
   packagerConfig: {
@@ -44,4 +44,4 @@ export default {
       ],
     }),
   ],
-};
+}

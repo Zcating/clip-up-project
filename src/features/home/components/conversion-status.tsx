@@ -14,7 +14,7 @@ export function ConversionStatus({
   fileProgressMap,
   videoFiles,
   totalFiles,
-  totalProgressPercent
+  totalProgressPercent,
 }: ConversionStatusProps) {
   return (
     <div className="mb-4 p-4 bg-blue-50 rounded-lg">
@@ -23,13 +23,12 @@ export function ConversionStatus({
           已完成: {convertProgress ? convertProgress.currentIndex + 1 : 0} / {totalFiles}
           {convertProgress && convertProgress.result && (
             <span className={convertProgress.result.success ? ' text-green-600' : ' text-red-600'}>
-              {' '}(上一个{convertProgress.result.success ? '成功' : '失败'})
+              {' '}
+              (上一个{convertProgress.result.success ? '成功' : '失败'})
             </span>
           )}
         </p>
-        <p className="text-sm text-blue-800 font-medium">
-          {totalProgressPercent.toFixed(2)}%
-        </p>
+        <p className="text-sm text-blue-800 font-medium">{totalProgressPercent.toFixed(2)}%</p>
       </div>
       <Progress value={totalProgressPercent} />
 
@@ -50,8 +49,10 @@ export function ConversionStatus({
                 <div className="flex-1">
                   <Progress value={progress} className="h-1.5" />
                 </div>
-                <span className={`w-12 text-right font-medium ${progress === 100 ? 'text-green-600' : 'text-blue-600'
-                  }`}>
+                <span
+                  className={`w-12 text-right font-medium ${progress === 100 ? 'text-green-600' : 'text-blue-600'
+                    }`}
+                >
                   {progress.toFixed(0)}%
                 </span>
               </div>

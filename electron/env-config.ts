@@ -1,20 +1,20 @@
-import { app } from 'electron';
-import path from 'path';
+import { app } from 'electron'
+import path from 'path'
 
 // Declare global variables as they are injected by the build system
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const MAIN_WINDOW_VITE_NAME: string;
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string
+declare const MAIN_WINDOW_VITE_NAME: string
 
-const isPackaged = app.isPackaged;
+const isPackaged = app.isPackaged
 
 interface EnvConfig {
-  isProduction: boolean;
-  ffmpegPath: string;
-  ffprobePath: string;
-  assetsPath: string;
-  entryUrl: string;
-  devServerUrl: string;
-  appName: string;
+  isProduction: boolean
+  ffmpegPath: string
+  ffprobePath: string
+  assetsPath: string
+  entryUrl: string
+  devServerUrl: string
+  appName: string
 }
 
 function getEnvConfig(): EnvConfig {
@@ -27,21 +27,20 @@ function getEnvConfig(): EnvConfig {
       entryUrl: path.join(process.resourcesPath, 'app.asar/.vite/renderer/main_window/index.html'),
       devServerUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL,
       appName: MAIN_WINDOW_VITE_NAME,
-    };
+    }
   } else {
     return {
       isProduction: isPackaged,
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       ffmpegPath: require('ffmpeg-static'),
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      ffprobePath: (require('ffprobe-static')).path,
+      ffprobePath: require('ffprobe-static').path,
       assetsPath: path.join(__dirname, 'assets'),
       entryUrl: path.join(__dirname, '../renderer/main_window/index.html'),
       devServerUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL,
       appName: MAIN_WINDOW_VITE_NAME,
-    };
+    }
   }
 }
 
-export const envConfig = getEnvConfig();
-
+export const envConfig = getEnvConfig()

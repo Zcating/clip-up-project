@@ -5,10 +5,10 @@ import {
   TableRow,
   TableCell,
   TableBody,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import type { VideoFile } from "../types"
-import { formatFileSize } from "../utils/format-file-size"
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import type { VideoFile } from '../types'
+import { formatFileSize } from '../utils/format-file-size'
 
 interface VideoTableProps {
   videos: VideoFile[]
@@ -33,7 +33,11 @@ export function VideoTable({ videos, onRemove, disabled = false }: VideoTablePro
             <TableRow key={`${video.path}-${index}`}>
               <TableCell>
                 <div className="flex items-center">
-                  <svg className="h-5 w-5 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="h-5 w-5 text-blue-500 mr-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                   </svg>
                   <span className="text-sm text-gray-900 truncate max-w-xs" title={video.path}>
@@ -41,12 +45,8 @@ export function VideoTable({ videos, onRemove, disabled = false }: VideoTablePro
                   </span>
                 </div>
               </TableCell>
-              <TableCell>
-                {formatFileSize(video.size)}
-              </TableCell>
-              <TableCell>
-                {new Date(video.lastModified).toLocaleString('zh-CN')}
-              </TableCell>
+              <TableCell>{formatFileSize(video.size)}</TableCell>
+              <TableCell>{new Date(video.lastModified).toLocaleString('zh-CN')}</TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"

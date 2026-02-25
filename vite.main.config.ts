@@ -1,17 +1,17 @@
-import { defineConfig } from 'vite';
-import path from 'path';
-import * as fs from 'fs';
+import { defineConfig } from 'vite'
+import path from 'path'
+import * as fs from 'fs'
 
 const copyAssetsPlugin = () => ({
   name: 'copy-assets',
   closeBundle() {
-    const srcDir = path.resolve(__dirname, 'electron/assets');
-    const destDir = path.resolve(__dirname, '.vite/build/assets');
+    const srcDir = path.resolve(__dirname, 'electron/assets')
+    const destDir = path.resolve(__dirname, '.vite/build/assets')
     if (fs.existsSync(srcDir)) {
-      fs.cpSync(srcDir, destDir, { recursive: true });
+      fs.cpSync(srcDir, destDir, { recursive: true })
     }
   },
-});
+})
 
 export default defineConfig({
   plugins: [copyAssetsPlugin()],
@@ -23,14 +23,7 @@ export default defineConfig({
       fileName: () => 'main.js',
     },
     rollupOptions: {
-      external: [
-        'electron',
-        'electron-log',
-        'ffmpeg-static',
-        'ffprobe-static',
-        'path',
-        'fs',
-      ],
+      external: ['electron', 'electron-log', 'ffmpeg-static', 'ffprobe-static', 'path', 'fs'],
     },
     minify: false,
     emptyOutDir: false,
@@ -38,4 +31,4 @@ export default defineConfig({
   resolve: {
     mainFields: ['module', 'jsnext:main', 'jsnext'],
   },
-});
+})
