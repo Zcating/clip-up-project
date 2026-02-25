@@ -1,9 +1,12 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
+import { DLogToRec709Converter } from './dlog-to-rec709-converter';
+
+let mainWindow: BrowserWindow | null = null;
 
 const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -53,6 +56,63 @@ ipcMain.handle('get-video-metadata', async (_event, filePath: string) => {
     console.error('获取视频元数据失败:', error);
     return null;
   }
+});
+
+ipcMain.handle('batch-convert-videos', async (_event, options: {
+  inputFiles: string[];
+  outputDir: string;
+  method?: 'simple' | 'advanced';
+  dlogType?: 'dlog' | 'dlogm';
+  concurrency?: number;
+}) => {
+  const { inputFiles, outputDir, method = 'advanced', dlogType = 'dlogm', concurrency = 2 } = options;
+
+  if (inputFiles.length === 0) {
+    return { success: false, error: '没有输入文件' };
+  }
+
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const converter = new DLogToRec709Converter({ mode: method, dlogType });
+
+  const files = inputFiles.map(inputPath => {
+    const fileName = path.basename(inputPath, path.extname(inputPath));
+    const outputPath = path.join(outputDir, `${fileName}_rec709.mp4`);
+    return { input: inputPath, output: outputPath, config: { mode: method, dlogType } };
+  });
+
+  const results = await converter.batchConvert(files, concurrency, {
+    onProgress: (currentIndex, total, result) => {
+      mainWindow?.webContents.send('convert-progress', { currentIndex, total, result });
+    }
+  });
+
+  const successCount = results.filter(r => r.success).length;
+  const failCount = results.filter(r => !r.success).length;
+
+  return {
+    success: failCount === 0,
+    results,
+    summary: {
+      total: results.length,
+      success: successCount,
+      failed: failCount
+    }
+  };
+});
+
+ipcMain.handle('select-output-directory', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory', 'createDirectory']
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  return result.filePaths[0];
 });
 
 // This method will be called when Electron has finished

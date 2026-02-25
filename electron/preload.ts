@@ -5,5 +5,18 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   setTitle: (title: string) => ipcRenderer.send('set-title', title),
   openVideoFiles: () => ipcRenderer.invoke('open-video-files'),
-  getVideoMetadata: (filePath: string) => ipcRenderer.invoke('get-video-metadata', filePath)
+  getVideoMetadata: (filePath: string) => ipcRenderer.invoke('get-video-metadata', filePath),
+  selectOutputDirectory: () => ipcRenderer.invoke('select-output-directory'),
+  batchConvertVideos: (options: {
+    inputFiles: string[];
+    outputDir: string;
+    method?: 'simple' | 'advanced';
+    dlogType?: 'dlog' | 'dlogm';
+    concurrency?: number;
+  }) => ipcRenderer.invoke('batch-convert-videos', options),
+  onConvertProgress: (callback: (data: { currentIndex: number; total: number; result: unknown }) => void) => {
+    const handler = (_event: unknown, data: { currentIndex: number; total: number; result: unknown }) => callback(data);
+    ipcRenderer.on('convert-progress', handler);
+    return () => ipcRenderer.removeListener('convert-progress', handler);
+  }
 })

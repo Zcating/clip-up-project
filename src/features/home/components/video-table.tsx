@@ -7,7 +7,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { VideoFile } from '../types'
+import type { VideoFile } from '../types'
 import { formatFileSize } from '../utils/format-file-size'
 
 interface VideoTableProps {
