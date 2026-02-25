@@ -32,9 +32,9 @@ function getEnvConfig(): EnvConfig {
     return {
       isProduction: isPackaged,
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      ffmpegPath: require('ffmpeg-static') as string,
+      ffmpegPath: require('ffmpeg-static'),
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      ffprobePath: (require('ffprobe-static') as { path: string }).path,
+      ffprobePath: (require('ffprobe-static')).path,
       assetsPath: path.join(__dirname, 'assets'),
       entryUrl: path.join(__dirname, '../renderer/main_window/index.html'),
       devServerUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL,
