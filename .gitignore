@@ -12,6 +12,8 @@ dist
 dist-ssr
 dist-electron
 *.local
+out
+.vite
 
 # Editor directories and files
 .vscode/*
@@ -27,7 +29,6 @@ dist-electron
 .trae
 .agents
 skills-lock.json
-out
 
 test-results
 playwright-report
