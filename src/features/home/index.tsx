@@ -23,7 +23,6 @@ function Home() {
     setIsImporting(true)
     try {
       const filePaths = await window.electronAPI.openVideoFiles()
-
       if (filePaths.length === 0) {
         setIsImporting(false)
         return
@@ -80,10 +79,13 @@ function Home() {
         dlogType: 'dlogm',
         concurrency: 2
       })
+      if (result.error) {
+        console.error('批量转换失败:', result.error)
+      }
+      console.log('批量转换成功:', result)
       setConvertResult(result)
     } catch (error) {
       console.error('批量转换失败:', error)
-      console.log(error);
     } finally {
       setIsConverting(false)
     }
