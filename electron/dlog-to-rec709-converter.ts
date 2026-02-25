@@ -2,9 +2,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-// 引入 FFmpeg 静态路径配置
-import ffmpegStatic from 'ffmpeg-static';
-import ffprobeStatic from 'ffprobe-static';
 
 /**
  * 视频转换选项接口
@@ -18,6 +15,7 @@ export interface ConvertOptions {
   method?: 'simple' | 'advanced';  // 转换方法：简单模式或高级模式
   lut?: string;              // LUT (Look-Up Table) 文件路径，用于自定义颜色映射
   dlogType?: 'dlog' | 'dlogm';  // D-Log 类型：dlog 或 dlogm
+  mode?: 'simple' | 'advanced';  // 转换模式：简单模式或高级模式
 }
 
 /**
@@ -34,8 +32,8 @@ interface ConvertResult {
  * 用于初始化 DLogToRec709Converter 类的配置选项
  */
 interface ConvertConfig {
-  ffmpegPath?: string;        // 自定义 FFmpeg 可执行文件路径
-  ffprobePath?: string;       // 自定义 FFprobe 可执行文件路径
+  ffmpegPath: string;        // 自定义 FFmpeg 可执行文件路径
+  ffprobePath: string;       // 自定义 FFprobe 可执行文件路径
   mode?: 'simple' | 'advanced';  // 默认转换模式
   dlogType?: 'dlog' | 'dlogm';   // 默认 D-Log 类型
 }
@@ -47,7 +45,11 @@ interface ConvertConfig {
 interface BatchFile {
   input: string;              // 输入文件路径
   output: string;             // 输出文件路径
-  config: ConvertConfig;      // 该文件的转换配置
+  config: {
+    mode?: 'simple' | 'advanced';  // 默认转换模式
+    dlogType?: 'dlog' | 'dlogm';   // 默认 D-Log 类型
+    lut?: string;              // LUT (Look-Up Table) 文件路径，用于自定义颜色映射
+  };      // 该文件的转换配置
 }
 
 /**
@@ -79,22 +81,16 @@ interface BatchOptions {
 export class DLogToRec709Converter {
   private ffmpegPath: string;       // FFmpeg 可执行文件路径
   private ffprobePath: string;      // FFprobe 可执行文件路径
-  private mode: 'simple' | 'advanced';  // 默认转换模式
-  private dlogType: 'dlog' | 'dlogm';   // 默认 D-Log 类型
 
   /**
    * 构造函数
    * @param config 转换器配置选项
    */
-  constructor(config: ConvertConfig = {}) {
+  constructor(config: ConvertConfig) {
     // 初始化 FFmpeg 路径，优先使用自定义路径，否则使用 ffmpeg-static
-    this.ffmpegPath = config.ffmpegPath || ffmpegStatic || '';
+    this.ffmpegPath = config.ffmpegPath;
     // 初始化 FFprobe 路径
-    this.ffprobePath = config.ffprobePath || ffprobeStatic.path;
-    // 默认使用高级模式
-    this.mode = config.mode || 'advanced';
-    // 默认使用 dlogm 类型
-    this.dlogType = config.dlogType || 'dlogm';
+    this.ffprobePath = config.ffprobePath;
   }
 
   /**
@@ -104,7 +100,7 @@ export class DLogToRec709Converter {
    * @param lutPath LUT 文件路径（可选）
    * @returns FFmpeg 滤镜字符串
    */
-  private buildFilter(method: 'simple' | 'advanced' = 'advanced', lutPath?: string): string {
+  private buildFilter(method: 'simple' | 'advanced' = 'advanced', dlogType: 'dlog' | 'dlogm' = 'dlogm', lutPath?: string): string {
     // 如果提供了 LUT 文件路径，使用 LUT 滤镜
     if (lutPath) {
       return this.buildLutFilter(lutPath);
@@ -114,7 +110,7 @@ export class DLogToRec709Converter {
     if (method === 'simple') {
       return this.buildSimpleFilter();
     }
-    return this.buildAdvancedFilter();
+    return this.buildAdvancedFilter(dlogType);
   }
 
   /**
@@ -144,7 +140,7 @@ export class DLogToRec709Converter {
    * 通过线性转换中间步骤确保色彩准确性
    * @returns 高级滤镜字符串
    */
-  private buildAdvancedFilter(): string {
+  private buildAdvancedFilter(dlogType: 'dlog' | 'dlogm' = 'dlogm'): string {
     // D-Log 和 D-LogM 使用相同的滤镜链
     const dlogFilters: Record<string, string> = {
       dlog: 'zscale=transfer=linear,primaries=bt709:transfer=bt709,zscale=transfer=bt709:primaries=bt709:matrix=bt709',
@@ -152,7 +148,7 @@ export class DLogToRec709Converter {
     };
 
     // 根据 dlogType 选择对应的滤镜，默认使用 dlog
-    const baseFilter = dlogFilters[this.dlogType] || dlogFilters.dlog;
+    const baseFilter = dlogFilters[dlogType] || dlogFilters.dlog;
     return baseFilter;
   }
 
@@ -221,7 +217,8 @@ export class DLogToRec709Converter {
         crf = 18,             // 默认 CRF 值，平衡质量与文件大小
         overwrite = true,     // 默认覆盖已存在的文件
         progress = null,      // 默认不启用进度回调
-        method = this.mode,   // 使用实例默认的转换方法
+        method,               // 使用实例默认的转换方法
+        dlogType = 'dlogm',
         lut = null            // 默认不使用 LUT
       } = options;
 
@@ -247,7 +244,7 @@ export class DLogToRec709Converter {
       }
 
       // 构建滤镜字符串
-      const filterStr = this.buildFilter(method, lut || undefined);
+      const filterStr = this.buildFilter(method, dlogType, lut || undefined);
 
       // 构建 FFmpeg 命令参数数组
       const args: string[] = [

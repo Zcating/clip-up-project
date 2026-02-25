@@ -2,17 +2,12 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { DLogToRec709Converter } from './dlog-to-rec709-converter';
-
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const MAIN_WINDOW_VITE_NAME: string;
+import { envConfig } from './env-config';
 
 let mainWindow: BrowserWindow | null = null;
 
 const getAssetPath = (...paths: string[]): string => {
-  const basePath = app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'assets')
-    : path.join(__dirname, 'assets');
-  return path.join(basePath, ...paths);
+  return path.join(envConfig.assetsPath, ...paths);
 };
 
 const createWindow = () => {
@@ -26,11 +21,7 @@ const createWindow = () => {
     },
   });
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-  }
+  mainWindow.loadURL(envConfig.entryUrl);
   mainWindow.webContents.openDevTools();
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
@@ -85,8 +76,6 @@ ipcMain.handle('batch-convert-videos', async (_event, options: {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const converter = new DLogToRec709Converter({ mode: method, dlogType });
-
   const files = inputFiles.map(inputPath => {
     const fileName = path.basename(inputPath, path.extname(inputPath));
 
@@ -99,6 +88,12 @@ ipcMain.handle('batch-convert-videos', async (_event, options: {
         lut: getAssetPath('DJI OSMO Pocket 3 D-Log M to Rec.709 V1.cube')
       }
     };
+  });
+
+
+  const converter = new DLogToRec709Converter({
+    ffmpegPath: envConfig.ffmpegPath,
+    ffprobePath: envConfig.ffprobePath
   });
 
   const results = await converter.batchConvert(files, concurrency, {
