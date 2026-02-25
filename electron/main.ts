@@ -89,9 +89,11 @@ ipcMain.handle('batch-convert-videos', async (_event, options: {
 
   const files = inputFiles.map(inputPath => {
     const fileName = path.basename(inputPath, path.extname(inputPath));
-    const outputPath = path.join(outputDir, `${fileName}_rec709.mp4`);
+
     return {
-      input: inputPath, output: outputPath, config: {
+      input: inputPath,
+      output: path.join(outputDir, `${fileName}_rec709.mp4`),
+      config: {
         mode: method,
         dlogType,
         lut: getAssetPath('DJI OSMO Pocket 3 D-Log M to Rec.709 V1.cube')
@@ -102,6 +104,9 @@ ipcMain.handle('batch-convert-videos', async (_event, options: {
   const results = await converter.batchConvert(files, concurrency, {
     onProgress: (currentIndex, total, result) => {
       mainWindow?.webContents.send('convert-progress', { currentIndex, total, result });
+    },
+    onFileProgress: (currentIndex, total, progress) => {
+      mainWindow?.webContents.send('convert-file-progress', { currentIndex, total, progress });
     }
   });
 
@@ -128,7 +133,7 @@ ipcMain.handle('select-output-directory', async () => {
     return null;
   }
 
-  return result.filePaths[0];
+  return result.filePaths[0].replace(/\\/g, '\\\\');
 });
 
 // This method will be called when Electron has finished

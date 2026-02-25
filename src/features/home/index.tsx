@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import type { VideoFile, ConvertProgress, BatchConvertResponse } from './types'
 import { VideoTable } from './components/video-table'
 import { VideoEmpty } from './components/video-empty'
@@ -10,13 +11,30 @@ function Home() {
   const [isConverting, setIsConverting] = useState(false)
   const [outputDir, setOutputDir] = useState<string>('')
   const [convertProgress, setConvertProgress] = useState<ConvertProgress | null>(null)
+  const [fileProgressMap, setFileProgressMap] = useState<Record<number, number>>({})
   const [convertResult, setConvertResult] = useState<BatchConvertResponse | null>(null)
 
   useEffect(() => {
-    const unsubscribe = window.electronAPI.onConvertProgress((data) => {
+    const unsubscribeProgress = window.electronAPI.onConvertProgress((data) => {
       setConvertProgress(data)
+      // 确保完成的文件进度为 100%
+      setFileProgressMap(prev => ({
+        ...prev,
+        [data.currentIndex]: 100
+      }))
     })
-    return () => unsubscribe()
+
+    const unsubscribeFileProgress = window.electronAPI.onConvertFileProgress((data) => {
+      setFileProgressMap(prev => ({
+        ...prev,
+        [data.currentIndex]: data.progress
+      }))
+    })
+
+    return () => {
+      unsubscribeProgress()
+      unsubscribeFileProgress()
+    }
   }, [])
 
   const handleImportVideos = useCallback(async () => {
@@ -68,6 +86,7 @@ function Home() {
 
     setIsConverting(true)
     setConvertProgress(null)
+    setFileProgressMap({})
     setConvertResult(null)
 
     try {
@@ -92,6 +111,11 @@ function Home() {
   }, [videoFiles, outputDir])
 
   const canConvert = videoFiles.length > 0 && outputDir && !isConverting
+
+  const totalFiles = videoFiles.length
+  const totalProgressPercent = totalFiles > 0
+    ? Object.values(fileProgressMap).reduce((a, b) => a + b, 0) / totalFiles
+    : 0
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -124,7 +148,11 @@ function Home() {
           {videoFiles.length === 0 ? (
             <VideoEmpty />
           ) : (
-            <VideoTable videos={videoFiles} onRemove={handleRemoveVideo} />
+            <VideoTable
+              videos={videoFiles}
+              onRemove={handleRemoveVideo}
+              disabled={isConverting}
+            />
           )}
         </div>
 
@@ -155,16 +183,49 @@ function Home() {
             </Button>
           </div>
 
-          {convertProgress && (
+          {isConverting && (
             <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                正在处理: {convertProgress.currentIndex + 1} / {convertProgress.total}
-                {convertProgress.result && (
-                  <span className={convertProgress.result.success ? ' text-green-600' : ' text-red-600'}>
-                    {' '}({convertProgress.result.success ? '成功' : '失败'})
-                  </span>
-                )}
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-blue-800">
+                  已完成: {convertProgress ? convertProgress.currentIndex + 1 : 0} / {totalFiles}
+                  {convertProgress && convertProgress.result && (
+                    <span className={convertProgress.result.success ? ' text-green-600' : ' text-red-600'}>
+                      {' '}(上一个{convertProgress.result.success ? '成功' : '失败'})
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-blue-800 font-medium">
+                  {totalProgressPercent.toFixed(2)}%
+                </p>
+              </div>
+              <Progress value={totalProgressPercent} />
+
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium text-blue-900">文件进度详情:</p>
+                <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+                  {videoFiles.map((video, index) => {
+                    const progress = fileProgressMap[index] || 0
+                    const isProcessing = progress > 0 || index === (convertProgress?.currentIndex ?? -1)
+
+                    if (!isProcessing) return null
+
+                    return (
+                      <div key={index} className="flex items-center gap-3 text-sm">
+                        <span className="w-48 truncate text-gray-600" title={video.name}>
+                          {video.name}
+                        </span>
+                        <div className="flex-1">
+                          <Progress value={progress} className="h-1.5" />
+                        </div>
+                        <span className={`w-12 text-right font-medium ${progress === 100 ? 'text-green-600' : 'text-blue-600'
+                          }`}>
+                          {progress.toFixed(0)}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           )}
 

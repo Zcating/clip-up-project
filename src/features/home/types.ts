@@ -39,6 +39,12 @@ export interface ConvertProgress {
   result: ConvertResult
 }
 
+export interface ConvertFileProgress {
+  currentIndex: number
+  total: number
+  progress: number
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -48,6 +54,7 @@ declare global {
       selectOutputDirectory: () => Promise<string | null>
       batchConvertVideos: (options: ConvertOptions) => Promise<BatchConvertResponse>
       onConvertProgress: (callback: (data: ConvertProgress) => void) => () => void
+      onConvertFileProgress: (callback: (data: ConvertFileProgress) => void) => () => void
     }
   }
 }

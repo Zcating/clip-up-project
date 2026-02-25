@@ -68,6 +68,7 @@ interface BatchResult {
 interface BatchOptions {
   concurrency?: number;       // 并发转换的文件数量
   onProgress?: (currentIndex: number, total: number, result: BatchResult) => void;  // 进度回调
+  onFileProgress?: (currentIndex: number, total: number, progress: number) => void; // 单个文件进度回调 (0-100)
 }
 
 /**
@@ -123,7 +124,9 @@ export class DLogToRec709Converter {
    * @returns LUT 滤镜字符串
    */
   private buildLutFilter(lutPath: string): string {
-    return `lut3d=${lutPath}`;
+    const normalizedPath = lutPath.replace(/\\/g, '/');
+    const escapedPath = normalizedPath.replace(/:/g, '\\:');
+    return `lut3d=file='${escapedPath}'`;
   }
 
   /**
@@ -151,6 +154,51 @@ export class DLogToRec709Converter {
     // 根据 dlogType 选择对应的滤镜，默认使用 dlog
     const baseFilter = dlogFilters[this.dlogType] || dlogFilters.dlog;
     return baseFilter;
+  }
+
+  /**
+   * 获取视频时长
+   * @param inputPath 视频文件路径
+   * @returns 视频时长（秒）
+   */
+  private getVideoDuration(inputPath: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const args = [
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        inputPath
+      ];
+
+      const ffprobe = spawn(this.ffprobePath, args);
+      let stdout = '';
+      let stderr = '';
+
+      ffprobe.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      ffprobe.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      ffprobe.on('close', (code) => {
+        if (code === 0) {
+          const duration = parseFloat(stdout);
+          if (isNaN(duration)) {
+            reject(new Error('无法解析视频时长'));
+          } else {
+            resolve(duration);
+          }
+        } else {
+          reject(new Error(`ffprobe 退出，错误码: ${code}\n${stderr}`));
+        }
+      });
+
+      ffprobe.on('error', (err) => {
+        reject(new Error(`无法启动 ffprobe: ${err.message}`));
+      });
+    });
   }
 
   /**
@@ -287,8 +335,27 @@ export class DLogToRec709Converter {
       // 从文件数组中获取当前文件信息
       const { input, output, config } = files[index];
 
+      let duration = 0;
+      try {
+        duration = await this.getVideoDuration(input);
+      } catch (e) {
+        console.warn(`无法获取视频时长: ${input}`, e);
+      }
+
+      const fileConfig: ConvertOptions = {
+        ...config,
+        progress: (time: number) => {
+          if (duration <= 0 || typeof options.onFileProgress !== 'function') {
+            return;
+          }
+          const percent = Math.min(100, (time / duration) * 100);
+          options.onFileProgress(index, files.length, percent);
+
+        }
+      };
+
       // 执行转换并处理结果
-      const batchResult = await this.convert(input, output, config).then(() => ({
+      const batchResult = await this.convert(input, output, fileConfig).then(() => ({
         input,
         output,
         error: null,

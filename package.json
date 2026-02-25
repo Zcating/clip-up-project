@@ -65,7 +65,9 @@
       "minizlib": "^3.0.1"
     },
     "onlyBuiltDependencies": [
-      "electron"
+      "electron",
+      "ffmpeg-static",
+      "ffprobe-static"
     ]
   }
 }

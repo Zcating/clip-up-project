@@ -1,21 +1,22 @@
 import {
   Table,
-  TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import type { VideoFile } from '../types'
-import { formatFileSize } from '../utils/format-file-size'
+  TableCell,
+  TableBody,
+} from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import type { VideoFile } from "../types"
+import { formatFileSize } from "../utils/format-file-size"
 
 interface VideoTableProps {
   videos: VideoFile[]
   onRemove: (index: number) => void
+  disabled?: boolean
 }
 
-export function VideoTable({ videos, onRemove }: VideoTableProps) {
+export function VideoTable({ videos, onRemove, disabled = false }: VideoTableProps) {
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <Table>
@@ -52,6 +53,7 @@ export function VideoTable({ videos, onRemove }: VideoTableProps) {
                   size="sm"
                   onClick={() => onRemove(index)}
                   className="text-red-600 hover:text-red-800 h-auto p-0"
+                  disabled={disabled}
                 >
                   删除
                 </Button>
