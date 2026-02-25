@@ -12,6 +12,7 @@ export default {
     extraResource: [
       './node_modules/ffmpeg-static/ffmpeg.exe',
       './node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe',
+      './electron/assets',
     ],
   },
   rebuildConfig: {},

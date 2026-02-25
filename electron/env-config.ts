@@ -7,52 +7,41 @@ declare const MAIN_WINDOW_VITE_NAME: string;
 
 const isPackaged = app.isPackaged;
 
-// Determine paths for ffmpeg and ffprobe
-let ffmpegPath: string = '';
-let ffprobePath: string = '';
+interface EnvConfig {
+  isProduction: boolean;
+  ffmpegPath: string;
+  ffprobePath: string;
+  assetsPath: string;
+  entryUrl: string;
+  devServerUrl: string;
+  appName: string;
+}
 
-if (isPackaged) {
-  // Production: use resources path
-  const platform = process.platform;
-  const ext = platform === 'win32' ? '.exe' : '';
-  ffmpegPath = path.join(process.resourcesPath, 'ffmpeg' + ext);
-  ffprobePath = path.join(process.resourcesPath, 'ffprobe' + ext);
-} else {
-  try {
-    // Development: use static binaries from node_modules
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    ffmpegPath = require('ffmpeg-static') as string;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    ffprobePath = (require('ffprobe-static') as { path: string }).path;
-  } catch (error) {
-    console.error('Failed to load ffmpeg/ffprobe in dev environment:', error);
+function getEnvConfig(): EnvConfig {
+  if (app.isPackaged) {
+    return {
+      isProduction: isPackaged,
+      ffmpegPath: path.join(process.resourcesPath, 'ffmpeg.exe'),
+      ffprobePath: path.join(process.resourcesPath, 'ffprobe.exe'),
+      assetsPath: path.join(process.resourcesPath, 'assets'),
+      entryUrl: path.join(process.resourcesPath, 'app.asar/.vite/renderer/main_window/index.html'),
+      devServerUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL,
+      appName: MAIN_WINDOW_VITE_NAME,
+    };
+  } else {
+    return {
+      isProduction: isPackaged,
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      ffmpegPath: require('ffmpeg-static') as string,
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      ffprobePath: (require('ffprobe-static') as { path: string }).path,
+      assetsPath: path.join(__dirname, 'assets'),
+      entryUrl: path.join(__dirname, '../renderer/main_window/index.html'),
+      devServerUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL,
+      appName: MAIN_WINDOW_VITE_NAME,
+    };
   }
 }
 
-// Assets path
-const assetsPath = path.join(__dirname, 'assets');
+export const envConfig = getEnvConfig();
 
-// Entry URL for the main window
-const entryUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL
-  ? MAIN_WINDOW_VITE_DEV_SERVER_URL
-  : path.join(__dirname, '../renderer/main_window/index.html');
-
-// isLocalFile logic: true when there is NO dev server URL
-const isLocalFile = !MAIN_WINDOW_VITE_DEV_SERVER_URL;
-
-// DevTools logic: open in development
-const openDevTools = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
-
-export const envConfig = {
-  isPackaged,
-  ffmpegPath,
-  ffprobePath,
-  assetsPath,
-  entryUrl,
-  isLocalFile,
-  openDevTools,
-};
-
-// Export these for type checking if needed elsewhere, 
-// though they are global variables injected at runtime.
-export { MAIN_WINDOW_VITE_DEV_SERVER_URL, MAIN_WINDOW_VITE_NAME };

@@ -21,13 +21,13 @@ const createWindow = () => {
     },
   });
 
-  if (envConfig.isPackaged) {
+  if (envConfig.isProduction) {
     mainWindow.loadFile(envConfig.entryUrl);
   } else {
     mainWindow.loadURL(envConfig.entryUrl);
+    mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.webContents.openDevTools();
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('页面加载失败:', errorCode, errorDescription);
