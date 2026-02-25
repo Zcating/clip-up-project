@@ -34,7 +34,7 @@ export default {
       renderer: [
         {
           name: 'main_window',
-          config: 'vite.config.ts',
+          config: 'vite.renderer.config.ts',
         },
       ],
     }),
