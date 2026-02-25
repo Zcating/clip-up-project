@@ -7,8 +7,12 @@ export default {
     name: 'ClipUp',
     executableName: 'ClipUp',
     asar: {
-      unpack: 'electron/assets/**/*',
+      unpack: 'build/assets/**/*',
     },
+    extraResource: [
+      './node_modules/ffmpeg-static/ffmpeg.exe',
+      './node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe',
+    ],
   },
   rebuildConfig: {},
   makers: [

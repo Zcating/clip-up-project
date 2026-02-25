@@ -30,14 +30,12 @@ if (isPackaged) {
 }
 
 // Assets path
-const assetsPath = isPackaged
-  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'electron', 'assets')
-  : path.join(__dirname, 'assets');
+const assetsPath = path.join(__dirname, 'assets');
 
 // Entry URL for the main window
 const entryUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL
   ? MAIN_WINDOW_VITE_DEV_SERVER_URL
-  : "app://./main_window/index.html";
+  : path.join(__dirname, '../renderer/main_window/index.html');
 
 // isLocalFile logic: true when there is NO dev server URL
 const isLocalFile = !MAIN_WINDOW_VITE_DEV_SERVER_URL;

@@ -21,7 +21,12 @@ const createWindow = () => {
     },
   });
 
-  mainWindow.loadURL(envConfig.entryUrl);
+  if (envConfig.isPackaged) {
+    mainWindow.loadFile(envConfig.entryUrl);
+  } else {
+    mainWindow.loadURL(envConfig.entryUrl);
+  }
+
   mainWindow.webContents.openDevTools();
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
